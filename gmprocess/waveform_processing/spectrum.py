@@ -241,6 +241,7 @@ def spectrum_cost(x,
             - 'REA99' for Raoof et al. (1999)
         q_model (str): Name of model for anelastic attenuation. Currently only supported value:
             - 'REA99' for Raoof et al. (1999)
+            - 'BOORE03' for Boore segmented Q model (2003)
             - 'none' for no anelastic attenuation
         crust_mod (str): Name of model for crustal amplification. Currently only supported value:
             - 'BT15' for Boore and Thompson (2015)
@@ -310,6 +311,7 @@ def model(x,
             - 'REA99' for Raoof et al. (1999)
         q_model (str): Name of model for anelastic attenuation. Currently only supported value:
             - 'REA99' for Raoof et al. (1999)
+            - 'BOORE03' for Boore segmented Q model (2003)
             - 'none' for no anelastic attenuation
         crust_mod (str): Name of model for crustal amplification. Currently only supported value:
             - 'BT15' for Boore and Thompson (2015)
@@ -471,6 +473,7 @@ def path(freq, dist, gs_mod="REA99", q_mod="REA99"):
             - 'REA99' for Raoof et al. (1999)
         q_model (str): Name of model for anelastic attenuation. Currently only supported value:
             - 'REA99' for Raoof et al. (1999)
+            - 'BOORE03' for Boore segmented Q model (2003)
             - 'none' for no anelastic attenuation
 
     Returns:
@@ -586,6 +589,7 @@ def anelastic_attenuation(freq, dist, model='REA99'):
         dist (float): Distance (km).
         model (str):  Name of model for anelastic attenuation. Currently only supported value:
             - 'REA99' for Raoof et al. (1999)
+            - 'BOORE03' for Boore segmented Q model (2003)
             - 'none' for no anelastic attenuation
 
     Returns:
@@ -597,6 +601,29 @@ def anelastic_attenuation(freq, dist, model='REA99'):
         quality_factor = 180 * freq**0.45
         cq = 3.5
         anelastic = np.exp(-np.pi * freq * dist / quality_factor / cq)
+    elif model == 'BOORE03':
+        cq = 3.6
+        fr1, fr2 = 0.1, 1.0
+        qr1, qr2 = 275, 88.0
+        s1, s2 = -2.0, 0.9
+        ft1, ft2 = 0.2, 0.6
+        bq = np.zeros(len(freq))
+        qt1 = qr1*(ft1/fr1)**s1
+        qt2 = qr2*(ft2/fr2)**s2
+        st = 0.0
+        if (ft1 != ft2):
+            st = np.log10(qt2/qt1)/np.log10(ft2/ft1)
+        idx = 0
+        for f in freq:
+            if (f <= ft1):
+                bq[idx] = qr1*(f/fr1)**s1
+            elif (ft1 <= f <= ft2):
+                bq[idx] = qt1*(f/ft1)**st
+            else:
+                bq[idx] = qr2*(f/fr2)**s2
+            idx += 1
+        anelastic = np.exp(-np.pi * freq * dist / bq / cq)
+        anelastic /= (np.sqrt(1.+(freq/25.0)**8.0)
     elif model == 'none':
         anelastic = np.ones_like(freq)
     else:
