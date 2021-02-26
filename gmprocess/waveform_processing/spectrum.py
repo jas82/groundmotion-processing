@@ -623,7 +623,7 @@ def anelastic_attenuation(freq, dist, model='REA99'):
                 bq[idx] = qr2*(f/fr2)**s2
             idx += 1
         anelastic = np.exp(-np.pi * freq * dist / bq / cq)
-        anelastic /= (np.sqrt(1.+(freq/25.0)**8.0)
+        anelastic /= (np.sqrt(1.+(freq/25.0)**8.0))
     elif model == 'none':
         anelastic = np.ones_like(freq)
     else:
